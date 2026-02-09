@@ -19,7 +19,7 @@ use rand::Rng;
 
 static DELTA_TIME_NS: AtomicU64 = AtomicU64::new(0);
 
-const SCREEN_MEASURES: (i32,i32) = (120,30);
+const SCREEN_MEASURES: (i32,i32) = (156,50);
 
 
 
@@ -28,6 +28,62 @@ fn get_delta_time() ->Duration {
 	Duration::from_nanos(DELTA_TIME_NS.load(Ordering::Relaxed))
 
 	}
+
+
+
+fn make_frame(out: &mut Stdout){
+
+	out.execute(cursor::MoveTo(0,1)).unwrap();
+	
+	let edge_char : String = "#".to_string();
+
+	for _ in 0..SCREEN_MEASURES.0{
+		write!(out,"{}",edge_char).unwrap();
+	}
+	
+	out.execute(cursor::MoveTo(0,SCREEN_MEASURES.1.try_into().unwrap())).unwrap();
+	for _ in 0..SCREEN_MEASURES.0{
+		write!(out,"{}",edge_char).unwrap();
+	}
+
+	for left_rail in 1..=SCREEN_MEASURES.1{
+		out.execute(cursor::MoveTo(0,left_rail.try_into().unwrap())).unwrap();
+		write!(out,"{}",edge_char).unwrap();
+		out.execute(cursor::MoveTo(SCREEN_MEASURES.0.try_into().unwrap(),left_rail.try_into().unwrap())).unwrap();
+		write!(out,"{}",edge_char).unwrap();
+	}
+
+
+}
+
+
+fn display_minimap(out: &mut Stdout) {
+
+
+
+	let minimap = vec![
+			"######################",
+			"#             ##### #",
+			"## ##########       #",
+			"##              #####",
+			"## #####   ##########",
+			"## # # #           ##",
+			"##     ########### ##",
+			"##            W#   ##",
+			"#####################",
+			];
+	let mut i = 0;
+	for row in minimap{
+
+		out.execute(cursor::MoveTo((SCREEN_MEASURES.0).try_into().unwrap(),i.try_into().unwrap()));
+		write!(out,"{}",row);
+		out.flush();
+		i += 1;
+	}
+}
+
+
+
 
 
 fn main(){
@@ -44,11 +100,19 @@ fn main(){
 	stdout.execute(terminal::Clear(ClearType::All)).unwrap();
 
 
+
+	make_frame(&mut stdout);
+
+
 	//this is not really neccessary
 	
 	sleep(Duration::from_millis(50));
 
 
+	display_minimap(&mut stdout);
+
+
+	// this be the main game loop
 	loop{
 
 	//this is the logic so that you can have
@@ -86,8 +150,4 @@ fn main(){
 	terminal::disable_raw_mode().unwrap();
 	
 	let _ = disable_raw_mode();
-
-
-
-
 }
