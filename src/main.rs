@@ -30,39 +30,87 @@ fn get_delta_time() ->Duration {
 	}
 
 
+struct Vector {
 
-fn make_frame(out: &mut Stdout){
+	x:f64,
+	y:f64,
 
-	out.execute(cursor::MoveTo(0,1)).unwrap();
-	
-	let edge_char : String = "#".to_string();
-
-	for _ in 0..SCREEN_MEASURES.0{
-		write!(out,"{}",edge_char).unwrap();
-	}
-	
-	out.execute(cursor::MoveTo(0,SCREEN_MEASURES.1.try_into().unwrap())).unwrap();
-	for _ in 0..SCREEN_MEASURES.0{
-		write!(out,"{}",edge_char).unwrap();
 	}
 
-	for left_rail in 1..=SCREEN_MEASURES.1{
-		out.execute(cursor::MoveTo(0,left_rail.try_into().unwrap())).unwrap();
-		write!(out,"{}",edge_char).unwrap();
-		out.execute(cursor::MoveTo(SCREEN_MEASURES.0.try_into().unwrap(),left_rail.try_into().unwrap())).unwrap();
-		write!(out,"{}",edge_char).unwrap();
+
+struct Player {
+	position : Vector,
+	angle : f64,
 	}
 
+struct Ray {
+	origin : Vector,
+	direction : Vector,
+	angle : f64,
+	}
+
+struct Line{
+	a: Vector,
+	b: Vector
+	}
+
+
+fn ray_line_delta(r : &Ray, l :&Line) -> f64{
+
+	//first we construct the points in the ray and line equations:
+
+	let o = &r.origin;
+	let b = &l.b;
+	let a = &l.a;
+
+
+	let e = Vector {x:0.0,y:0.0};
+	let f = Vector {x:0.0,y:0.0};
+	let d = Vector {x:0.0,y:0.0};
+
+
+	//we are returning a dummy value for now
+	0.0	
 
 }
 
+fn make_frame(out: &mut Stdout){
+
+	
+	let edge_char : String = "🧱".to_string();
+
+
+        //this are the horizontal edges
+	out.execute(cursor::MoveTo(0,1)).unwrap();
+
+	for _ in 0..(SCREEN_MEASURES.0/2){
+		write!(out,"{}",edge_char).unwrap();
+	}
+
+
+	out.execute(cursor::MoveTo(0,SCREEN_MEASURES.1 as u16)).unwrap();
+	
+	for _ in 0..(SCREEN_MEASURES.0/2){
+		write!(out,"{}",edge_char).unwrap();
+	}
+
+	//now there are the vertical borders
+	for i in 0..(SCREEN_MEASURES.1 ){
+		out.execute(cursor::MoveTo(0,i as u16)).unwrap();
+		write!(out,"{}",edge_char).unwrap();
+		out.execute(cursor::MoveTo((SCREEN_MEASURES.0 - 2) as u16, i as u16)).unwrap();
+		write!(out,"{}", edge_char).unwrap();
+	}	
+
+
+}
 
 fn display_minimap(out: &mut Stdout) {
 
 
 
 	let minimap = vec![
-			"######################",
+			"#####################",
 			"#             ##### #",
 			"## ##########       #",
 			"##              #####",
@@ -75,7 +123,7 @@ fn display_minimap(out: &mut Stdout) {
 	let mut i = 0;
 	for row in minimap{
 
-		out.execute(cursor::MoveTo((SCREEN_MEASURES.0).try_into().unwrap(),i.try_into().unwrap()));
+		out.execute(cursor::MoveTo((SCREEN_MEASURES.0 - 50).try_into().unwrap(),(i + 3).try_into().unwrap()));
 		write!(out,"{}",row);
 		out.flush();
 		i += 1;
