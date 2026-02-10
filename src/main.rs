@@ -64,13 +64,15 @@ fn ray_line_delta(r : &Ray, l :&Line) -> f64{
 	let a = &l.a;
 
 
-	let e = Vector {x:0.0,y:0.0};
-	let f = Vector {x:0.0,y:0.0};
-	let d = Vector {x:0.0,y:0.0};
+	let e = Vector {x:(b.x - a.x),y: (b.y - b.y)};
+	let f = Vector {x:(o.x - a.x),y:(o.y - a.y)};
+	let d = Vector {x:r.direction.x , y:r.direction.y};
 
 
-	//we are returning a dummy value for now
-	0.0	
+	let u = (f.x*d.y - f.y*d.x) / (d.x*e.y - d.x*e.y);
+
+
+	u	
 
 }
 
