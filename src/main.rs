@@ -16,11 +16,12 @@ use std::sync::atomic::{AtomicU64,Ordering};
 
 use rand::Rng;
 
+use std::f64::consts::PI;
 
 static DELTA_TIME_NS: AtomicU64 = AtomicU64::new(0);
 
 const SCREEN_MEASURES: (i32,i32) = (156,50);
-
+const FOV: f64 = PI/2.0;
 
 
 
@@ -122,7 +123,7 @@ fn make_frame(out: &mut Stdout){
 
 
         //this are the horizontal edges
-	out.execute(cursor::MoveTo(0,1)).unwrap();
+	out.execute(cursor::MoveTo(0,0)).unwrap();
 
 	for _ in 0..(SCREEN_MEASURES.0/2){
 		write!(out,"{}",edge_char).unwrap();
