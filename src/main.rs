@@ -1,3 +1,8 @@
+mod vectors;
+
+use vectors::*;
+
+
 use crossterm::{
 		cursor,
 		terminal::{self,ClearType,enable_raw_mode, disable_raw_mode},
@@ -31,16 +36,9 @@ fn get_delta_time() ->f64 {
 	}
 
 
-struct Vector {
-
-	x:f64,
-	y:f64,
-
-	}
-
 
 struct Player {
-	position : Vector,
+	position : Vec2,
 	angle : f64,
 	speed : f64,
 	}
@@ -75,42 +73,33 @@ impl Player{
 
 impl Default for Player{
 	fn default() -> Self{
-		Self{position : Vector{x : 0.0, y: 0.0},
+		Self{position : Vec2{x : 0.0, y: 0.0},
 		angle : 0.0,
 		speed : 0.0,
 		}}
 	}
 
 struct Ray {
-	origin : Vector,
-	direction : Vector,
+	o : Vec2,
+	d : Vec2,
 	angle : f64,
 	}
 
 struct Line{
-	a: Vector,
-	b: Vector
+	a: Vec2,
+	b: Vec2,
 	}
 
 
-fn ray_line_delta(r : &Ray, l :&Line) -> f64{
+fn ray_line_delta(r : &Ray, l :&Line) -> (f64,f64){
+	
+	let e = l.b - l.a;
 
-	//first we construct the points in the ray and line equations:
-
-	let o = &r.origin;
-	let b = &l.b;
-	let a = &l.a;
-
-
-	let e = Vector {x:(b.x - a.x),y: (b.y - b.y)};
-	let f = Vector {x:(o.x - a.x),y:(o.y - a.y)};
-	let d = Vector {x:r.direction.x , y:r.direction.y};
+	let t = ((l.a - r.o) * e) / (r.d * e);
+	let u = ((l.a - r.o) * r.d) / (r.d * e);
 
 
-	let u = (f.x*d.y - f.y*d.x) / (d.x*e.y - d.x*e.y);
-
-
-	u
+	(t,u)
 
 }
 
@@ -207,7 +196,12 @@ fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<u8>>, pre_screen: &mut V
 
 }
 
+fn render_fov(out: &mut Stdout,player : Player, lines : Vec<Line>){
 
+
+
+
+	}
 
 
 fn main(){
@@ -215,9 +209,12 @@ fn main(){
 
 	let mut player = Player::default();
 	let line = Line{
-		a: Vector{x:-5.0,y:10.0},
-		b: Vector{x:5.0,y:10.0},
+		a: Vec2{x:-5.0,y:10.0},
+		b: Vec2{x:5.0,y:10.0},
 		};
+
+
+		
 
 	//this will be the buffer you actually make logic changes to
 	let buffer: [[u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize] = [[0;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
