@@ -24,8 +24,8 @@ const SCREEN_MEASURES: (i32,i32) = (156,50);
 
 
 
-fn get_delta_time() ->Duration {
-	Duration::from_nanos(DELTA_TIME_NS.load(Ordering::Relaxed))
+fn get_delta_time() ->f64 {
+	Duration::from_nanos(DELTA_TIME_NS.load(Ordering::Relaxed)).as_secs_f64()
 
 	}
 
@@ -41,6 +41,43 @@ struct Vector {
 struct Player {
 	position : Vector,
 	angle : f64,
+	speed : f64,
+	}
+
+
+impl Player{
+	fn rotate_left(&mut self){
+		self.angle += self.speed * get_delta_time();
+		}
+	fn rotate_right(&mut self){
+		self.angle -= self.speed * get_delta_time();
+		}
+
+	fn move_right(&mut self){
+		self.position.x += self.speed * get_delta_time();
+		}
+	fn move_left(&mut self){
+		self.position.x -= self.speed * get_delta_time();
+			}
+	fn move_up(&mut self){
+		self.position.y += self.speed* get_delta_time();
+		}
+	fn move_down(&mut self){
+		self.position.y -= self.speed* get_delta_time();
+		}
+	
+
+
+
+	}
+
+
+impl Default for Player{
+	fn default() -> Self{
+		Self{position : Vector{x : 0.0, y: 0.0},
+		angle : 0.0,
+		speed : 0.0,
+		}}
 	}
 
 struct Ray {
@@ -72,9 +109,11 @@ fn ray_line_delta(r : &Ray, l :&Line) -> f64{
 	let u = (f.x*d.y - f.y*d.x) / (d.x*e.y - d.x*e.y);
 
 
-	u	
+	u
 
 }
+
+
 
 fn make_frame(out: &mut Stdout){
 
@@ -133,10 +172,57 @@ fn display_minimap(out: &mut Stdout) {
 }
 
 
+//this function loads a line into the buffer
+fn load_line(buffer :&mut Vec<Vec<u8>>,x : usize, len : usize){
+
+	let buffer_collumn_size = buffer.len();
+	let start_point : usize = buffer_collumn_size/2 - len as usize/2;
+
+	for i in 0..len{
+		
+		buffer[i + start_point][x] = 1;
+		}
+
+
+	}
+
+
+
+//this function actually displays the buffer only changing on the screen the differences between the buffer and the prebuffer
+fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<u8>>, pre_screen: &mut Vec<Vec<u8>>){
+
+	for (i,line) in buffer.iter().enumerate(){
+		for (j,val) in line.iter().enumerate(){
+			if *val != pre_screen[i][j]{
+				pre_screen[i][j] = *val;
+				out.execute(cursor::MoveTo(i as u16,j as u16));
+				if *val == 1{write!(out,"█");}
+				else{write!(out," ");}
+				}
+
+			}
+	
+		}
+
+}
+
 
 
 
 fn main(){
+
+
+	let mut player = Player::default();
+	let line = Line{
+		a: Vector{x:-5.0,y:10.0},
+		b: Vector{x:5.0,y:10.0},
+		};
+
+	//this will be the buffer you actually make logic changes to
+	let buffer: [[u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize] = [[0;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
+        //this is the buffer that only gets changed in the differences between it and the buffer to minimize
+	//write operations on the console
+	let pre_buffer: [[u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize] = [[0;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
 
 	let _ = enable_raw_mode();
 
@@ -177,11 +263,13 @@ fn main(){
 	if event::poll(Duration::from_millis(0)).unwrap_or(false) {
 		if let Ok(Event::Key(key)) = event::read(){
 			match key.code {
-				KeyCode::Char('q') => break,
-				KeyCode::Left =>{},
-				KeyCode::Right => {},
-				KeyCode::Up => {},
-				KeyCode::Down => {},
+				KeyCode::Char('q') => player.rotate_left(),
+				KeyCode::Char('e') => player.rotate_right(),
+				KeyCode::Left =>player.move_left(),
+				KeyCode::Right => player.move_right(),
+				KeyCode::Up => player.move_left(),
+				KeyCode::Down => player.move_right(),
+				KeyCode::Esc => break,
 				_ => {},
 			
 
