@@ -272,20 +272,22 @@ fn main(){
 
 
 	let mut player = Player::default();
-	let line = Line{
-		a: Vec2{x:-5.0,y:10.0},
-		b: Vec2{x:5.0,y:10.0},
-		};
-	let line1 = Line{
-		a: Vec2{x:-5.0,y:10.0},
-		b: Vec2{x:5.0,y:-10.0},
-		};
 
-	let mut lines: Vec<Line> = Vec::new();
 
-	lines.push(line);
-	lines.push(line1);
-	
+	let mut lines :Vec<Line> = Vec::new();
+
+	for i in 0..50{
+		
+		lines.push(
+		Line{
+			a: Vec2{x: (5 * i) as f64, y: 10.0},
+			b: Vec2{x:(i+1) as f64, y: 10.0},
+
+			}
+		);
+		
+		
+		}
 		
 
 	//this will be the buffer you actually make logic changes to
