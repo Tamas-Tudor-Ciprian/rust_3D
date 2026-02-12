@@ -276,10 +276,15 @@ fn main(){
 		a: Vec2{x:-5.0,y:10.0},
 		b: Vec2{x:5.0,y:10.0},
 		};
+	let line1 = Line{
+		a: Vec2{x:-5.0,y:10.0},
+		b: Vec2{x:5.0,y:-10.0},
+		};
 
 	let mut lines: Vec<Line> = Vec::new();
 
 	lines.push(line);
+	lines.push(line1);
 	
 		
 
