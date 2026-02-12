@@ -27,7 +27,8 @@ static DELTA_TIME_NS: AtomicU64 = AtomicU64::new(0);
 
 const SCREEN_MEASURES: (i32,i32) = (156,50);
 const FOV: f64 = PI/2.0;
-
+const RENDER_DISTANCE : f64 = 25.0;
+const PLAYER_SPEED : f64 = 200.0;
 
 
 fn get_delta_time() ->f64 {
@@ -75,15 +76,22 @@ impl Default for Player{
 	fn default() -> Self{
 		Self{position : Vec2{x : 0.0, y: 0.0},
 		angle : 0.0,
-		speed : 0.0,
+		speed : PLAYER_SPEED,
 		}}
 	}
 
 struct Ray {
 	o : Vec2,
 	d : Vec2,
-	angle : f64,
 	}
+
+impl Ray{
+	fn from_angle(angle: f64) -> Vec2{
+		Vec2{x:angle.cos(),y:angle.sin()}
+	}
+
+
+}
 
 struct Line{
 	a: Vec2,
@@ -143,12 +151,12 @@ fn display_minimap(out: &mut Stdout) {
 	let minimap = vec![
 			"#####################",
 			"#             ##### #",
-			"## ##########       #",
-			"##              #####",
+			"#  ##########       #",
+			"#               #####",
 			"## #####   ##########",
-			"## # # #           ##",
-			"##     ########### ##",
-			"##            W#   ##",
+			"#  # # #            #",
+			"##     ############ #",
+			"#             W#    #",
 			"#####################",
 			];
 	let mut i = 0;
@@ -163,14 +171,16 @@ fn display_minimap(out: &mut Stdout) {
 
 
 //this function loads a line into the buffer
-fn load_line(buffer :&mut Vec<Vec<u8>>,x : usize, len : usize){
+fn load_line(buffer :&mut Vec<Vec<u8>>,x : usize, len : usize, val : &u8){
 
-	let buffer_collumn_size = buffer.len();
-	let start_point : usize = buffer_collumn_size/2 - len as usize/2;
+	let row_count = buffer.len(); // number of rows (SCREEN_MEASURES.1)
+	let len = len.min(row_count);  // clamp so we don't exceed screen height
+	if len == 0 { return; }
+	let start_point : usize = row_count/2 - len/2;
 
 	for i in 0..len{
 		
-		buffer[i + start_point][x] = 1;
+		buffer[i + start_point][x] = *val; // write vertically: row varies, column is fixed
 		}
 
 
@@ -185,23 +195,77 @@ fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<u8>>, pre_screen: &mut V
 		for (j,val) in line.iter().enumerate(){
 			if *val != pre_screen[i][j]{
 				pre_screen[i][j] = *val;
-				out.execute(cursor::MoveTo(i as u16,j as u16));
-				if *val == 1{write!(out,"█");}
-				else{write!(out," ");}
+				out.execute(cursor::MoveTo(j as u16,i as u16));
+		
+				match *val {
+					1 => write!(out,"█").unwrap(),
+					2 => write!(out,"▓").unwrap(),
+					3 => write!(out,"▒").unwrap(),
+					4 => write!(out,"░").unwrap(),
+					_ => write!(out," ").unwrap(),
+
 				}
+
 
 			}
 	
 		}
 
 }
+}
 
-fn render_fov(out: &mut Stdout,player : Player, lines : Vec<Line>){
+fn render_fov(buffer: &mut Vec<Vec<u8>>,player : &Player, lines : &Vec<Line>){
 
+	let mut rays: Vec<Ray> = Vec::new();
+
+
+	let initial_angle = player.angle - FOV/2.0;
+	let angle_increment = FOV/SCREEN_MEASURES.0 as f64;
+
+	for i in 0..SCREEN_MEASURES.0 {
+		
+		rays.push(Ray{o:player.position, d: Ray::from_angle(initial_angle + angle_increment * i as f64),})
+	}
+
+
+	for line in  lines{
+		for (i,ray) in rays.iter().enumerate(){
+			let (t,u) = ray_line_delta(ray,&line);
+			if t > 0.0 && u > 0.0 && u < 1.0{
+
+				let pct = t / RENDER_DISTANCE;
+
+				let shading = if pct < 0.25{
+				1 //this is for the closest
+				}else if pct < 0.50 {
+				2
+				}
+				else if pct < 0.75{
+				3
+				}
+				else if pct < 1.0{
+				4
+				}
+				else {0};
+				
+				load_line(buffer,i as usize,(RENDER_DISTANCE - t ) as usize,&shading);
+				
+			}
+		}
+
+	}
 
 
 
 	}
+
+fn display_player_coords(out:&mut Stdout,player: &Player)
+{
+
+		out.execute(cursor::MoveTo(2,2));
+		write!(out,"x: {} ; y: {}, angle: {}",player.position.x,player.position.y,player.angle).unwrap();
+
+}
 
 
 fn main(){
@@ -213,14 +277,17 @@ fn main(){
 		b: Vec2{x:5.0,y:10.0},
 		};
 
+	let mut lines: Vec<Line> = Vec::new();
 
+	lines.push(line);
+	
 		
 
 	//this will be the buffer you actually make logic changes to
-	let buffer: [[u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize] = [[0;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
+	let mut buffer: Vec<Vec<u8>> = vec![vec![0u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
         //this is the buffer that only gets changed in the differences between it and the buffer to minimize
 	//write operations on the console
-	let pre_buffer: [[u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize] = [[0;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
+	let mut pre_buffer: Vec<Vec<u8>> = vec![vec![0u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
 
 	let _ = enable_raw_mode();
 
@@ -249,6 +316,8 @@ fn main(){
 	// this be the main game loop
 	loop{
 
+	display_player_coords(&mut stdout,&player);
+
 	//this is the logic so that you can have
 	// that sweet delta time available
 	let now = Instant::now();
@@ -257,16 +326,24 @@ fn main(){
 	
 	DELTA_TIME_NS.store(dt.as_nanos() as u64, Ordering::Relaxed);
 
+	// Clear the buffer each frame
+	for row in buffer.iter_mut() {
+		for val in row.iter_mut() {
+			*val = 0;
+		}
+	}
+
+	render_fov(&mut buffer, &player, &lines);
 
 	if event::poll(Duration::from_millis(0)).unwrap_or(false) {
 		if let Ok(Event::Key(key)) = event::read(){
 			match key.code {
-				KeyCode::Char('q') => player.rotate_left(),
-				KeyCode::Char('e') => player.rotate_right(),
+				KeyCode::Char('e') => player.rotate_left(),
+				KeyCode::Char('q') => player.rotate_right(),
 				KeyCode::Left =>player.move_left(),
 				KeyCode::Right => player.move_right(),
-				KeyCode::Up => player.move_left(),
-				KeyCode::Down => player.move_right(),
+				KeyCode::Up => player.move_up(),
+				KeyCode::Down => player.move_down(),
 				KeyCode::Esc => break,
 				_ => {},
 			
@@ -276,7 +353,9 @@ fn main(){
 		}
 	}
 
+	display_buffer(&mut stdout,&mut buffer, &mut pre_buffer);
 
+	//this is where the loop end btw
 	}
 
 	
@@ -287,3 +366,5 @@ fn main(){
 	
 	let _ = disable_raw_mode();
 }
+
+
