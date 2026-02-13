@@ -31,6 +31,9 @@ const RENDER_DISTANCE : f64 = 25.0;
 const PLAYER_SPEED : f64 = 200.0;
 
 
+
+
+
 fn get_delta_time() ->f64 {
 	Duration::from_nanos(DELTA_TIME_NS.load(Ordering::Relaxed)).as_secs_f64()
 
@@ -147,21 +150,10 @@ fn make_frame(out: &mut Stdout){
 
 }
 
-fn display_minimap(out: &mut Stdout) {
+fn display_minimap(out: &mut Stdout, minimap : &Vec<&str>) {
 
 
 
-	let minimap = vec![
-			"#####################",
-			"#             ##### #",
-			"#  ##########       #",
-			"#               #####",
-			"## #####   ##########",
-			"#  # # #            #",
-			"##     ############ #",
-			"#             W#    #",
-			"#####################",
-			];
 	let mut i = 0;
 	for row in minimap{
 
@@ -181,11 +173,12 @@ fn load_line(buffer :&mut Vec<Vec<u8>>,x : usize, len : usize, val : &u8){
 	if len == 0 { return; }
 	let start_point : usize = row_count/2 - len/2;
 
-	for i in 0..len{
-		
-		buffer[i + start_point][x] = *val; // write vertically: row varies, column is fixed
-		}
-
+	if *val < buffer[row_count/2][x] || buffer[row_count/2][x] == 0{
+		for i in 0..len{
+			// write vertically: row varies, column is fixed
+			buffer[i + start_point][x] = *val;
+			}
+	}
 
 	}
 
@@ -262,6 +255,32 @@ fn render_fov(buffer: &mut Vec<Vec<u8>>,player : &Player, lines : &Vec<Line>){
 
 	}
 
+fn get_lines_from_char_maze(maze : &Vec<&str>) -> Vec<Line>{
+
+	let mut lines: Vec<Line> = Vec::new();
+
+
+	for (i,line) in maze.iter().enumerate() {
+		for (j,character) in line.chars().enumerate(){
+			if character == '#'{
+			lines.push(
+			Line{
+				a: Vec2{x: (5 * i) as f64, y: j as f64 * 5.0},
+				b: Vec2{x:(5.0 * i as f64 - 4.5) as f64, y: (j as f64 * 5.0 - 4.5) as f64},
+
+			}
+				);
+
+				}	
+			}
+
+		}
+
+	lines
+
+
+	}
+
 fn display_player_coords(out:&mut Stdout,player: &Player)
 {
 
@@ -273,24 +292,24 @@ fn display_player_coords(out:&mut Stdout,player: &Player)
 
 fn main(){
 
+	let minimap = vec![
+			"#####################",
+			"#P            ##### #",
+			"#  ##########       #",
+			"#               #####",
+			"## #####   ##########",
+			"#  # # #            #",
+			"##     ############ #",
+			"#              #    #",
+			"############## ######",
+			];
 
 	let mut player = Player::default();
 
 
 	let mut lines :Vec<Line> = Vec::new();
 
-	for i in 0..50{
-		
-		lines.push(
-		Line{
-			a: Vec2{x: (5 * i) as f64, y: 10.0},
-			b: Vec2{x:(5.0 * i as f64 - 4.5) as f64, y: 10.0},
-
-			}
-		);
-		
-		
-		}
+	let lines = get_lines_from_char_maze(&minimap);
 		
 
 	//this will be the buffer you actually make logic changes to
@@ -312,7 +331,7 @@ fn main(){
 
 
 
-	make_frame(&mut stdout);
+	//make_frame(&mut stdout);
 
 
 	//this is not really neccessary
@@ -320,7 +339,7 @@ fn main(){
 	sleep(Duration::from_millis(50));
 
 
-	display_minimap(&mut stdout);
+	display_minimap(&mut stdout, &minimap);
 
 
 	// this be the main game loop
