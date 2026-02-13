@@ -6,7 +6,7 @@ use vectors::*;
 use crossterm::{
 		cursor,
 		terminal::{self,ClearType,enable_raw_mode, disable_raw_mode},
-		event::{self, Event, KeyCode},
+		event::{self, Event, KeyCode, KeyEventKind},
 		ExecutableCommand,
 		style::*,
 		};
@@ -55,21 +55,20 @@ impl Player{
 
 	fn move_right(&mut self){
 		self.position.x += (self.angle + PI/2.0).cos() * self.speed * get_delta_time();
-		self.position.y += (self.angle + PI/2.0).cos() * self.speed * get_delta_time();
+		self.position.y += (self.angle + PI/2.0).sin() * self.speed * get_delta_time();
 	}
 	fn move_left(&mut self){
 		self.position.x += (self.angle - PI/2.0).cos() * self.speed * get_delta_time();
-		self.position.y += (self.angle - PI/2.0).cos() * self.speed * get_delta_time();
+		self.position.y += (self.angle - PI/2.0).sin() * self.speed * get_delta_time();
 			}
 	fn move_up(&mut self){
 		self.position.x += self.angle.cos() * self.speed * get_delta_time();
-		self.position.y += self.angle.cos() * self.speed * get_delta_time();
+		self.position.y += self.angle.sin() * self.speed * get_delta_time();
 		}
 	fn move_down(&mut self){
 	
 		self.position.x -= self.angle.cos() * self.speed * get_delta_time();
-		self.position.y -= self.angle.cos() * self.speed * get_delta_time();
-	}	
+		self.position.y -= self.angle.sin() * self.speed * get_delta_time(); }	
 
 
 
@@ -348,18 +347,17 @@ fn main(){
 
 	if event::poll(Duration::from_millis(0)).unwrap_or(false) {
 		if let Ok(Event::Key(key)) = event::read(){
-			match key.code {
-				KeyCode::Char('e') => player.rotate_left(),
-				KeyCode::Char('q') => player.rotate_right(),
-				KeyCode::Left =>player.move_left(),
-				KeyCode::Right => player.move_right(),
-				KeyCode::Up => player.move_up(),
-				KeyCode::Down => player.move_down(),
-				KeyCode::Esc => break,
-				_ => {},
-			
-
-
+			if key.kind == KeyEventKind::Press {
+				match key.code {
+					KeyCode::Char('e') => player.rotate_left(),
+					KeyCode::Char('q') => player.rotate_right(),
+					KeyCode::Left =>player.move_left(),
+					KeyCode::Right => player.move_right(),
+					KeyCode::Up => player.move_up(),
+					KeyCode::Down => player.move_down(),
+					KeyCode::Esc => break,
+					_ => {},
+				}
 			}
 		}
 	}
