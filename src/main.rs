@@ -54,18 +54,22 @@ impl Player{
 		}
 
 	fn move_right(&mut self){
-		self.position.x += self.speed * get_delta_time();
-		}
+		self.position.x += (self.angle + PI/2.0).cos() * self.speed * get_delta_time();
+		self.position.y += (self.angle + PI/2.0).cos() * self.speed * get_delta_time();
+	}
 	fn move_left(&mut self){
-		self.position.x -= self.speed * get_delta_time();
+		self.position.x += (self.angle - PI/2.0).cos() * self.speed * get_delta_time();
+		self.position.y += (self.angle - PI/2.0).cos() * self.speed * get_delta_time();
 			}
 	fn move_up(&mut self){
-		self.position.y += self.speed* get_delta_time();
+		self.position.x += self.angle.cos() * self.speed * get_delta_time();
+		self.position.y += self.angle.cos() * self.speed * get_delta_time();
 		}
 	fn move_down(&mut self){
-		self.position.y -= self.speed* get_delta_time();
-		}
 	
+		self.position.x -= self.angle.cos() * self.speed * get_delta_time();
+		self.position.y -= self.angle.cos() * self.speed * get_delta_time();
+	}	
 
 
 
@@ -281,7 +285,7 @@ fn main(){
 		lines.push(
 		Line{
 			a: Vec2{x: (5 * i) as f64, y: 10.0},
-			b: Vec2{x:(i+1) as f64, y: 10.0},
+			b: Vec2{x:(5.0 * i as f64 - 4.5) as f64, y: 10.0},
 
 			}
 		);
