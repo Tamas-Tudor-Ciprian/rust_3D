@@ -29,6 +29,7 @@ const SCREEN_MEASURES: (i32,i32) = (156,50);
 const FOV: f64 = PI/2.0;
 const RENDER_DISTANCE : f64 = 25.0;
 const PLAYER_SPEED : f64 = 200.0;
+const PLAYER_ROTATION_SPEED : f64 = 100.0;
 
 
 
@@ -50,10 +51,10 @@ struct Player {
 
 impl Player{
 	fn rotate_left(&mut self){
-		self.angle += self.speed * get_delta_time();
+		self.angle += PLAYER_ROTATION_SPEED * get_delta_time();
 		}
 	fn rotate_right(&mut self){
-		self.angle -= self.speed * get_delta_time();
+		self.angle -= PLAYER_ROTATION_SPEED * get_delta_time();
 		}
 
 	fn move_right(&mut self){
@@ -263,14 +264,46 @@ fn get_lines_from_char_maze(maze : &Vec<&str>) -> Vec<Line>{
 	for (i,line) in maze.iter().enumerate() {
 		for (j,character) in line.chars().enumerate(){
 			if character == '#'{
+			//this are the lines that make up a square
+			let square_size = 3.0 ;
+			let starting_point = 0.0 ;
+			let distance_between_squares = 0.5;
+
+			let x_move = j as f64 * square_size + distance_between_squares;
+			let y_move = i as f64 * square_size + distance_between_squares;
+
+			//lower line
 			lines.push(
 			Line{
-				a: Vec2{x: (5 * i) as f64, y: j as f64 * 5.0},
-				b: Vec2{x:(5.0 * i as f64 - 4.5) as f64, y: (j as f64 * 5.0 - 4.5) as f64},
+				a: Vec2{x: starting_point + x_move, y:  starting_point + y_move},
+				b: Vec2{x:square_size + x_move, y: starting_point + y_move},
 
 			}
 				);
+			//leftside line
+			lines.push(
+			Line{
+				a: Vec2{x: starting_point + x_move, y:  starting_point + y_move},
+				b: Vec2{x:starting_point + x_move, y:square_size + y_move},
 
+			}
+				);
+			//upper line 
+			lines.push(
+			Line{
+				a: Vec2{x: starting_point + x_move, y:  square_size + y_move},
+				b: Vec2{x:square_size + x_move, y: square_size + y_move},
+
+			}
+				);
+			//rightside line
+			lines.push(
+			Line{
+				a: Vec2{x: square_size + x_move, y:  square_size + y_move},
+				b: Vec2{x:square_size + x_move, y: starting_point + y_move},
+
+			}
+				);
 				}	
 			}
 
@@ -307,10 +340,9 @@ fn main(){
 	let mut player = Player::default();
 
 
-	let mut lines :Vec<Line> = Vec::new();
 
 	let lines = get_lines_from_char_maze(&minimap);
-		
+
 
 	//this will be the buffer you actually make logic changes to
 	let mut buffer: Vec<Vec<u8>> = vec![vec![0u8;SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
