@@ -1,7 +1,8 @@
 mod vectors;
+mod player;
 
 use vectors::*;
-
+use player::*;
 
 use crossterm::{
 		cursor,
@@ -42,50 +43,6 @@ fn get_delta_time() ->f64 {
 
 
 
-struct Player {
-	position : Vec2,
-	angle : f64,
-	speed : f64,
-	}
-
-
-impl Player{
-	fn rotate_left(&mut self){
-		self.angle += PLAYER_ROTATION_SPEED * get_delta_time();
-		}
-	fn rotate_right(&mut self){
-		self.angle -= PLAYER_ROTATION_SPEED * get_delta_time();
-		}
-
-	fn move_right(&mut self){
-		self.position.x += (self.angle + PI/2.0).cos() * self.speed * get_delta_time();
-		self.position.y += (self.angle + PI/2.0).sin() * self.speed * get_delta_time();
-	}
-	fn move_left(&mut self){
-		self.position.x += (self.angle - PI/2.0).cos() * self.speed * get_delta_time();
-		self.position.y += (self.angle - PI/2.0).sin() * self.speed * get_delta_time();
-			}
-	fn move_up(&mut self){
-		self.position.x += self.angle.cos() * self.speed * get_delta_time();
-		self.position.y += self.angle.sin() * self.speed * get_delta_time();
-		}
-	fn move_down(&mut self){
-	
-		self.position.x -= self.angle.cos() * self.speed * get_delta_time();
-		self.position.y -= self.angle.sin() * self.speed * get_delta_time(); }	
-
-
-
-	}
-
-
-impl Default for Player{
-	fn default() -> Self{
-		Self{position : Vec2{x : 0.0, y: 0.0},
-		angle : 0.0,
-		speed : PLAYER_SPEED,
-		}}
-	}
 
 struct Ray {
 	o : Vec2,
@@ -400,12 +357,12 @@ fn main(){
 		if let Ok(Event::Key(key)) = event::read(){
 			if key.kind == KeyEventKind::Press {
 				match key.code {
-					KeyCode::Char('e') => player.rotate_left(),
-					KeyCode::Char('q') => player.rotate_right(),
-					KeyCode::Left =>player.move_left(),
-					KeyCode::Right => player.move_right(),
-					KeyCode::Up => player.move_up(),
-					KeyCode::Down => player.move_down(),
+					KeyCode::Char('e') => player.rotate_left(get_delta_time()),
+					KeyCode::Char('q') => player.rotate_right(get_delta_time()),
+					KeyCode::Left =>player.move_left(get_delta_time()),
+					KeyCode::Right => player.move_right(get_delta_time()),
+					KeyCode::Up => player.move_up(get_delta_time()),
+					KeyCode::Down => player.move_down(get_delta_time()),
 					KeyCode::Esc => break,
 					_ => {},
 				}
