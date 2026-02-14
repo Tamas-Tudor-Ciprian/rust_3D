@@ -2,7 +2,7 @@ use crate::vectors::*;
 use std::f64::consts::PI;
 
 const PLAYER_SPEED : f64 = 200.0;
-const PLAYER_ROTATION_SPEED : f64 = 100.0;
+const PLAYER_ROTATION_SPEED : f64 = 25.0;
 
 
 
