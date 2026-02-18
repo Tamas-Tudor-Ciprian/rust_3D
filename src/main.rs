@@ -1,8 +1,12 @@
 mod vectors;
 mod player;
+mod ray_line;
+
 
 use vectors::*;
 use player::*;
+use ray_line::*;
+
 
 use crossterm::{
 		cursor,
@@ -39,39 +43,6 @@ fn get_delta_time() ->f64 {
 
 	}
 
-
-
-
-struct Ray {
-	o : Vec2,
-	d : Vec2,
-	}
-
-impl Ray{
-	fn from_angle(angle: f64) -> Vec2{
-		Vec2{x:angle.cos(),y:angle.sin()}
-	}
-
-
-}
-
-struct Line{
-	a: Vec2,
-	b: Vec2,
-	}
-
-
-fn ray_line_delta(r : &Ray, l :&Line) -> (f64,f64){
-	
-	let e = l.b - l.a;
-
-	let t = ((l.a - r.o) * e) / (r.d * e);
-	let u = ((l.a - r.o) * r.d) / (r.d * e);
-
-
-	(t,u)
-
-}
 
 
 
@@ -150,14 +121,14 @@ fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<(u8,u8)>>, pre_screen: &
 				out.execute(cursor::MoveTo(j as u16,i as u16));
 		
 				match val {
-					(1,0) => write!(out,"{}","█".yellow()).unwrap(),
-					(2,0) => write!(out,"{}","▓".yellow()).unwrap(),
-					(3,0) => write!(out,"{}","▒".yellow()).unwrap(),
-					(4,0) => write!(out,"{}","░".yellow()).unwrap(),
-					(1,1) => write!(out,"{}","█".with(Color::DarkYellow)).unwrap(),
-					(2,1) => write!(out,"{}","▓".with(Color::DarkYellow)).unwrap(),
-					(3,1) => write!(out,"{}","▒".with(Color::DarkYellow)).unwrap(),
-					(4,1) => write!(out,"{}","░".with(Color::DarkYellow)).unwrap(),
+					(1,0) => write!(out,"{}","█".blue()).unwrap(),
+					(2,0) => write!(out,"{}","▓".blue()).unwrap(),
+					(3,0) => write!(out,"{}","▒".blue()).unwrap(),
+					(4,0) => write!(out,"{}","░".blue()).unwrap(),
+					(1,1) => write!(out,"{}","█".with(Color::White)).unwrap(),
+					(2,1) => write!(out,"{}","▓".with(Color::White)).unwrap(),
+					(3,1) => write!(out,"{}","▒".with(Color::White)).unwrap(),
+					(4,1) => write!(out,"{}","░".with(Color::White)).unwrap(),
 					_ => write!(out," ").unwrap(),
 
 				}
