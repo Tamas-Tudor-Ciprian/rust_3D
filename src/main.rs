@@ -1,7 +1,7 @@
 mod vectors;
 mod player;
 mod ray_line;
-
+mod delta_time;
 
 use vectors::*;
 use player::*;
@@ -20,15 +20,14 @@ use crossterm::{
 
 use std::io::{stdout, Write,Stdout};
 use std::thread::sleep;
-use std::time::{Instant,Duration};
-use std::sync::atomic::{AtomicU64,Ordering};
 
 
 use rand::Rng;
 
 use std::f64::consts::PI;
 
-static DELTA_TIME_NS: AtomicU64 = AtomicU64::new(0);
+
+use std::time::Duration;
 
 const SCREEN_MEASURES: (i32,i32) = (156,50);
 const FOV: f64 = PI/2.0;
@@ -38,10 +37,6 @@ const RENDER_DISTANCE : f64 = 25.0;
 
 
 
-fn get_delta_time() ->f64 {
-	Duration::from_nanos(DELTA_TIME_NS.load(Ordering::Relaxed)).as_secs_f64()
-
-	}
 
 
 
@@ -285,13 +280,8 @@ fn main(){
 
 	let _ = enable_raw_mode();
 
-	let mut last = Instant::now();
-
-
 	let mut stdout = stdout();
 
-	terminal::enable_raw_mode().unwrap();
-	stdout.execute(terminal::EnterAlternateScreen).unwrap();
 	stdout.execute(terminal::Clear(ClearType::All)).unwrap();
 
 
@@ -310,15 +300,11 @@ fn main(){
 	// this be the main game loop
 	loop{
 
+
+	delta_time::store();
+
 	display_player_coords(&mut stdout,&player);
 
-	//this is the logic so that you can have
-	// that sweet delta time available
-	let now = Instant::now();
-	let dt = now.duration_since(last);
-	last = now;
-	
-	DELTA_TIME_NS.store(dt.as_nanos() as u64, Ordering::Relaxed);
 
 	// Clear the buffer each frame
 	for row in buffer.iter_mut() {
@@ -333,12 +319,12 @@ fn main(){
 		if let Ok(Event::Key(key)) = event::read(){
 			if key.kind == KeyEventKind::Press {
 				match key.code {
-					KeyCode::Char('e') => player.rotate_left(get_delta_time()),
-					KeyCode::Char('q') => player.rotate_right(get_delta_time()),
-					KeyCode::Left =>player.move_left(get_delta_time()),
-					KeyCode::Right => player.move_right(get_delta_time()),
-					KeyCode::Up => player.move_up(get_delta_time()),
-					KeyCode::Down => player.move_down(get_delta_time()),
+					KeyCode::Char('e') => player.rotate_left(delta_time::get()),
+					KeyCode::Char('q') => player.rotate_right(delta_time::get()),
+					KeyCode::Left =>player.move_left(delta_time::get()),
+					KeyCode::Right => player.move_right(delta_time::get()),
+					KeyCode::Up => player.move_up(delta_time::get()),
+					KeyCode::Down => player.move_down(delta_time::get()),
 					KeyCode::Esc => break,
 					_ => {},
 				}
