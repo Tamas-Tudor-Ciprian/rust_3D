@@ -321,10 +321,10 @@ fn main(){
 				match key.code {
 					KeyCode::Char('e') => player.rotate_left(delta_time::get()),
 					KeyCode::Char('q') => player.rotate_right(delta_time::get()),
-					KeyCode::Left =>player.move_left(delta_time::get()),
-					KeyCode::Right => player.move_right(delta_time::get()),
-					KeyCode::Up => player.move_up(delta_time::get()),
-					KeyCode::Down => player.move_down(delta_time::get()),
+					KeyCode::Char('a') =>player.move_left(delta_time::get()),
+					KeyCode::Char('d') => player.move_right(delta_time::get()),
+					KeyCode::Char('w') => player.move_up(delta_time::get()),
+					KeyCode::Char('s') => player.move_down(delta_time::get()),
 					KeyCode::Esc => break,
 					_ => {},
 				}
