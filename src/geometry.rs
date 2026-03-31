@@ -49,14 +49,32 @@ pub fn ray_line_delta(r: &Ray, l: &Line) -> (f64,f64) {
 pub fn circle_line_intersection( c: &Circle, l: &Line) -> bool {
 
 
-	let line_direction = l.get_direction_vec();
+	//so basically you can get a second degree polynomial that allows you to solve the intersection by doing this:
+
+	//create the parameters:
+
+	let a = 1;
+	let b = 1;
+	let c = 1;
+
+
+	let (t1, t2) = quadratic(a,b,c);
+
 	
-	//this is the vector from the center of the circle to the "origin" of the line
-	let cicle_line = 
+
+}
 
 
-	let a = line_direction.x * line_direction.x + line_direction.y * line_direction.y;
-	let b = 2.0 * 
+pub fn quadratic (a : f64, b : f64 , c : f64) -> Result<(f64,f64)>
+{
+	let delta = b * b - 4 * a * c;
 
+	if delta < 0
+	{
+		return None;
+	}
 
+	let x1 = (-b + sqrt(delta)) / 2 * a;
+
+	let x2 = (-b - sqrt(delta)) / 2 * a;
 }
