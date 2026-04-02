@@ -89,3 +89,19 @@ pub fn quadratic (a : f64, b : f64 , c : f64) -> Result<(f64,f64)>
 
 	let x2 = (-b - sqrt(delta)) / 2 * a;
 }
+
+
+#[cfg(tests)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_tangent{
+	let result = circle_line_intersection();
+	assert_eq!(result,/*the actual result here*/);
+}
+
+//you can go on here with the other tests in the same manner
+
+
+}
