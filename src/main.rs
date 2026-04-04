@@ -2,6 +2,8 @@ mod vectors;
 mod player;
 mod ray_line;
 mod delta_time;
+mod geometry;
+
 
 use vectors::*;
 use player::*;

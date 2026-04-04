@@ -19,8 +19,9 @@ pub struct Ray{
 impl Ray{
 	pub fn from_angle(angle: f64) -> Vec2{
 		Vec2{x:angle.cos(), y:angle.sin()}
+						}
 	}
-}
+
 
 
 
@@ -30,11 +31,14 @@ pub struct Line{
 }
 
 
-impl Line{
-	pub fn get_direction_vec(&self) -> Vec2{
+impl Line
+{
+	pub fn get_direction_vector(&self) -> Vec2{
 		self.b - self.a
-}
+	}
+	
 
+}
 pub fn ray_line_delta(r: &Ray, l: &Line) -> (f64,f64) {
 
 	let e = l.b -l.a;
@@ -64,44 +68,89 @@ pub fn circle_line_intersection( c: &Circle, l: &Line) -> bool {
 
 	//now for the variables we will actually use
 
-	let alpha = 1 + slope;
-	let beta = a + b * slope;
-	let c = a * a + b * b - r * r;
+	let alpha = 1.0+ slope * slope;
+	let beta = 2.0 * (a + b * slope);
+	let c = a * a + b * b - c.r *c.r;
 
 
-	let (t1, t2) = quadratic(alpha,beta,c);
+	let intersection = quadratic(alpha,beta,c);
+
+	let (p1,p2) = intersection.unwrap();
+
+	let p1x = p1 + l.a.x;
+	let p1y = p1 * slope + l.a.y;
+
+	let p2x = p2 + l.a.x;
+	let p2y = p2 * slope + l.a.y;
+	
+
+	println!("DEBUG: the intersection points are p1 = ({},{}) ; p2 = ({},{})", p1x,p1y,p2x,p2y);
+
+	if intersection != None
+		{
+		true
+		}
+	else
+		{
+		false
+		}
 
 	
 
 }
 
 
-pub fn quadratic (a : f64, b : f64 , c : f64) -> Result<(f64,f64)>
+pub fn quadratic (a : f64, b : f64 , c : f64) -> Option<(f64,f64)>
 {
-	let delta = b * b - 4 * a * c;
+	let delta = b * b - 4.0 * a * c;
 
-	if delta < 0
+	if delta < 0.0
 	{
 		return None;
 	}
 
-	let x1 = (-b + sqrt(delta)) / 2 * a;
+	let x1 = (-b + delta.sqrt()) / (2.0 * a);
 
-	let x2 = (-b - sqrt(delta)) / 2 * a;
+	let x2 = (-b - delta.sqrt()) / (2.0 * a);
+
+	return Some((x1,x2));
 }
 
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
 	use super::*;
 
 	#[test]
-	fn test_tangent{
-	let result = circle_line_intersection();
-	assert_eq!(result,/*the actual result here*/);
+	fn test_quad(){
+		let result = quadratic(1.0,-5.0,6.0);
+		assert!(result == Some((2.0,3.0)) || result == Some((3.0,2.0)));
+
+	}
+
+	#[test]
+	fn test_circle_line_intersection1(){
+	
+		let circle = Circle{o:Vec2{x:0.0, y:0.0},r:1.0};
+		
+		let line = Line{a:Vec2{x:-3.0,y:-2.0},b:Vec2{x:1.0,y:2.0}};
+
+		let result = circle_line_intersection(&circle,&line);
+
+		assert!(result == true);
+
+
+	}
+
+	#[test]
+	fn test_circle_line_intersection()
+	{
+	 
+	}
+
+
+
 }
 
-//you can go on here with the other tests in the same manner
 
 
-}
