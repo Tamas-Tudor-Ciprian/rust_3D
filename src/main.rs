@@ -265,6 +265,16 @@ fn display_player_coords(out:&mut Stdout,player: &Player)
 
 }
 
+fn get_direction_block(player: &Player, lines: &Vec<Line>){
+
+
+
+
+
+
+
+}
+
 
 fn main(){
 
@@ -281,6 +291,8 @@ fn main(){
 			];
 
 	let mut player = Player::default();
+
+	player.position = Vec2{x: 6.0,y: 6.0};
 
 
 

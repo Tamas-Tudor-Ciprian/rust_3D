@@ -116,6 +116,47 @@ pub fn circle_line_intersection( c: &Circle, l: &Line) -> Option<(Vec2,Vec2)> {
 
 }
 
+pub fn point_to_line(p : &Vec2, l : &(Vec2,Vec2)) -> Option<Vec2>{
+
+	
+	//first we find the mid point of the line
+	let a = l.0;
+	let b = l.1;
+
+	let d = b - a;
+	
+	//this be the midpoint
+	let c = Vec2{x: d.x/2.0 , y: d.y/2.0};
+
+
+	//now we simply return the vector from the midpoint to our "origin"
+
+	let result = *p - c;
+
+
+	Some(result)
+
+
+}
+
+
+pub fn circle_line_dir(c : &Circle, l : &Line) -> Option<Vec2> {
+
+	let intersection_result = circle_line_intersection(&c,&l);
+	
+	if intersection_result != None{
+	
+	let dir = point_to_line(&c.o,&intersection_result.unwrap());
+
+	Some(dir.unwrap())
+	
+
+	}else{
+	return None;
+	}
+
+}
+
 
 pub fn quadratic (a : f64, b : f64 , c : f64) -> Option<(f64,f64)>
 {
