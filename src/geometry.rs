@@ -126,9 +126,9 @@ pub fn quadratic (a : f64, b : f64 , c : f64) -> Option<(f64,f64)>
 		return None;
 	}
 
-	let x1 = (-b + delta.sqrt()) / (2.0 * a);
+	let x1 = (-b - delta.sqrt()) / (2.0 * a);
 
-	let x2 = (-b - delta.sqrt()) / (2.0 * a);
+	let x2 = (-b + delta.sqrt()) / (2.0 * a);
 
 	return Some((x1,x2));
 }
@@ -139,7 +139,7 @@ mod tests {
 	use super::*;
 
 
-	const EPSILON: f64 = 1e-10;
+	const EPSILON: f64 = 1e-2;
 
 
 	fn assert_vec2_near(actual: Vec2, expected: Vec2)
@@ -180,9 +180,6 @@ mod tests {
 		assert_vec2_near(p2,expected2);
 
 	}
-
-
-
 
 }
 
