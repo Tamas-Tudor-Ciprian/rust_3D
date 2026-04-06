@@ -34,6 +34,8 @@ use std::time::Duration;
 const SCREEN_MEASURES: (i32,i32) = (156,50);
 const FOV: f64 = PI/2.0;
 const RENDER_DISTANCE : f64 = 25.0;
+const SQUARE_SIZE : f64 = 3.0;
+const SQUARE_DISTANCE : f64 = 0.0;
 
 
 
@@ -41,8 +43,7 @@ const RENDER_DISTANCE : f64 = 25.0;
 
 
 
-
-
+//this has been deprecated might remove later
 fn make_frame(out: &mut Stdout){
 
 	
@@ -74,18 +75,31 @@ fn make_frame(out: &mut Stdout){
 
 }
 
-fn display_minimap(out: &mut Stdout, minimap : &Vec<&str>) {
+fn display_minimap(out: &mut Stdout, minimap : &Vec<&str>, player : &Player) {
 
 
-
+	let minimap_origin = (50,0); //subject to change
 	let mut i = 0;
 	for row in minimap{
 
-		out.execute(cursor::MoveTo((SCREEN_MEASURES.0 - 50).try_into().unwrap(),(i + 3).try_into().unwrap()));
+		out.execute(cursor::MoveTo((SCREEN_MEASURES.0 - minimap_origin.0).try_into().unwrap(),(i + minimap_origin.1).try_into().unwrap()));
 		write!(out,"{}",row);
 		out.flush();
 		i += 1;
 	}
+
+	//display the player
+
+	let normalized_player_coords = ((player.position.x / 3.0) as i32,(player.position.y / 3.0) as i32);
+
+	out.execute(cursor::MoveTo((SCREEN_MEASURES.0 -minimap_origin.0 + normalized_player_coords.0).try_into().unwrap(),
+					(normalized_player_coords.1 + minimap_origin.1).try_into().unwrap()));
+	write!(out,"{}",'P');
+
+	
+
+
+
 }
 
 
@@ -195,18 +209,17 @@ fn get_lines_from_char_maze(maze : &Vec<&str>) -> Vec<Line>{
 		for (j,character) in line.chars().enumerate(){
 			if character == '#'{
 			//this are the lines that make up a square
-			let square_size = 3.0 ;
 			let starting_point = 0.0 ;
-			let distance_between_squares = 0.5;
+		
 
-			let x_move = j as f64 * square_size + distance_between_squares;
-			let y_move = i as f64 * square_size + distance_between_squares;
+			let x_move = j as f64 * SQUARE_SIZE + SQUARE_DISTANCE;
+			let y_move = i as f64 * SQUARE_SIZE + SQUARE_DISTANCE;
 
 			//lower line
 			lines.push(
 			Line{
 				a: Vec2{x: starting_point + x_move, y:  starting_point + y_move},
-				b: Vec2{x:square_size + x_move, y: starting_point + y_move},
+				b: Vec2{x:SQUARE_SIZE + x_move, y: starting_point + y_move},
 
 			}
 				);
@@ -214,23 +227,23 @@ fn get_lines_from_char_maze(maze : &Vec<&str>) -> Vec<Line>{
 			lines.push(
 			Line{
 				a: Vec2{x: starting_point + x_move, y:  starting_point + y_move},
-				b: Vec2{x:starting_point + x_move, y:square_size + y_move},
+				b: Vec2{x:starting_point + x_move, y:SQUARE_SIZE + y_move},
 
 			}
 				);
 			//upper line 
 			lines.push(
 			Line{
-				a: Vec2{x: starting_point + x_move, y:  square_size + y_move},
-				b: Vec2{x:square_size + x_move, y: square_size + y_move},
+				a: Vec2{x: starting_point + x_move, y:  SQUARE_SIZE + y_move},
+				b: Vec2{x:SQUARE_SIZE + x_move, y: SQUARE_SIZE + y_move},
 
 			}
 				);
 			//rightside line
 			lines.push(
 			Line{
-				a: Vec2{x: square_size + x_move, y:  square_size + y_move},
-				b: Vec2{x:square_size + x_move, y: starting_point + y_move},
+				a: Vec2{x: SQUARE_SIZE + x_move, y:  SQUARE_SIZE + y_move},
+				b: Vec2{x:SQUARE_SIZE + x_move, y: starting_point + y_move},
 
 			}
 				);
@@ -257,13 +270,13 @@ fn main(){
 
 	let minimap = vec![
 			"#####################",
-			"#P            ##### #",
-			"#  ##########       #",
-			"#               #####",
-			"## #####   ##########",
-			"#  # # #            #",
-			"##     ############ #",
-			"#              #    #",
+			"#                   #",
+			"#                   #",
+			"#                   #",
+			"#        ######     #",
+			"#                   #",
+			"#                   #",
+			"#                   #",
 			"############## ######",
 			];
 
@@ -296,7 +309,6 @@ fn main(){
 	sleep(Duration::from_millis(50));
 
 
-	display_minimap(&mut stdout, &minimap);
 
 
 	// this be the main game loop
@@ -305,8 +317,9 @@ fn main(){
 
 	delta_time::store();
 
+	
+	display_minimap(&mut stdout, &minimap, &player);
 	display_player_coords(&mut stdout,&player);
-
 
 	// Clear the buffer each frame
 	for row in buffer.iter_mut() {
