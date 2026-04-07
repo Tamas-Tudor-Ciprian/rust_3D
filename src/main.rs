@@ -103,14 +103,14 @@ fn display_minimap(out: &mut Stdout, minimap : &Vec<&str>, player : &Player) {
 
 
 //this function loads a line into the buffer
-fn load_line(buffer :&mut Vec<Vec<(u8,u8)>>,x : usize, len : usize, val : (u8,u8)){
+fn load_line(buffer :&mut Vec<Vec<(f64,u8,u8)>>,x : usize, len : usize, val : (f64,u8,u8)){
 
 	let row_count = buffer.len(); // number of rows (SCREEN_MEASURES.1)
 	let len = len.min(row_count);  // clamp so we don't exceed screen height
 	if len == 0 { return; }
 	let start_point : usize = row_count/2 - len/2;
 
-	if val.0 < buffer[row_count/2][x].0 || buffer[row_count/2][x].0 == 0{
+	if val.0 < buffer[row_count/2][x].0 {
 		for i in 0..len{
 			// write vertically: row varies, column is fixed
 			buffer[i + start_point][x] = val;
@@ -122,15 +122,15 @@ fn load_line(buffer :&mut Vec<Vec<(u8,u8)>>,x : usize, len : usize, val : (u8,u8
 
 
 //this function actually displays the buffer only changing on the screen the differences between the buffer and the prebuffer
-fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<(u8,u8)>>, pre_screen: &mut Vec<Vec<(u8,u8)>>){
+fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<(f64,u8,u8)>>, pre_screen: &mut Vec<Vec<(f64,u8,u8)>>){
 
 	for (i,line) in buffer.iter().enumerate(){
 		for (j,val) in line.iter().enumerate(){
-			if *val != pre_screen[i][j]{
+			if val.1 != pre_screen[i][j].1 || val.2 != pre_screen[i][j].2 {
 				pre_screen[i][j] = *val;
 				out.execute(cursor::MoveTo(j as u16,i as u16));
 		
-				match val {
+				match (val.1, val.2) {
 					(1,0) => write!(out,"{}","█".blue()).unwrap(),
 					(2,0) => write!(out,"{}","▓".blue()).unwrap(),
 					(3,0) => write!(out,"{}","▒".blue()).unwrap(),
@@ -149,9 +149,10 @@ fn display_buffer(out: &mut Stdout,buffer: &mut Vec<Vec<(u8,u8)>>, pre_screen: &
 		}
 
 }
+	out.flush().unwrap();
 }
 
-fn render_fov(buffer: &mut Vec<Vec<(u8,u8)>>,player : &Player, lines : &Vec<Line>){
+fn render_fov(buffer: &mut Vec<Vec<(f64,u8,u8)>>,player : &Player, lines : &Vec<Line>){
 
 	let mut rays: Vec<Ray> = Vec::new();
 
@@ -177,7 +178,7 @@ fn render_fov(buffer: &mut Vec<Vec<(u8,u8)>>,player : &Player, lines : &Vec<Line
 				let pct = t / RENDER_DISTANCE;
 
 
-				let mut shading = if pct < 0.25{
+				let mut shading : (u8,u8) = if pct < 0.25{
 				(1,0) //this is for the closest
 				}else if pct < 0.50 {
 				(2,0)
@@ -192,10 +193,10 @@ fn render_fov(buffer: &mut Vec<Vec<(u8,u8)>>,player : &Player, lines : &Vec<Line
 
 				if u < 0.025 || u > 0.975{shading.1 = 1;}
 
-				let wall_height = (SCREEN_MEASURES.1 as f64  * SQUARE_SIZE / t ) as usize;
+				let wall_height = (SCREEN_MEASURES.1 as f64  * SQUARE_SIZE / t / 2.0) as usize;
 
 				if shading.0 == 0 {continue;}	
-				load_line(buffer,i as usize,wall_height ,shading);
+				load_line(buffer,i as usize,wall_height ,(t, shading.0, shading.1));
 				
 			}
 		}
@@ -360,10 +361,10 @@ fn main(){
 
 
 	//this will be the buffer you actually make logic changes to
-	let mut buffer: Vec<Vec<(u8,u8)>> = vec![vec![(0u8,0u8);SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
+	let mut buffer: Vec<Vec<(f64,u8,u8)>> = vec![vec![(f64::MAX,0u8,0u8);SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
         //this is the buffer that only gets changed in the differences between it and the buffer to minimize
 	//write operations on the console
-	let mut pre_buffer: Vec<Vec<(u8,u8)>> = vec![vec![(0u8,0u8);SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
+	let mut pre_buffer: Vec<Vec<(f64,u8,u8)>> = vec![vec![(f64::MAX,0u8,0u8);SCREEN_MEASURES.0 as usize];SCREEN_MEASURES.1 as usize];
 
 	let _ = enable_raw_mode();
 
@@ -396,11 +397,13 @@ fn main(){
 	// Clear the buffer each frame
 	for row in buffer.iter_mut() {
 		for val in row.iter_mut() {
-			*val = (0,0);
+			*val = (f64::MAX,0,0);
 		}
 	}
 
 	render_fov(&mut buffer, &player, &lines);
+
+	display_buffer(&mut stdout,&mut buffer, &mut pre_buffer);
 
 	if event::poll(Duration::from_millis(0)).unwrap_or(false) {
 		if let Ok(Event::Key(key)) = event::read(){
@@ -423,8 +426,6 @@ fn main(){
 			}
 		}
 	}
-
-	display_buffer(&mut stdout,&mut buffer, &mut pre_buffer);
 
 	//this is where the loop end btw
 	}
