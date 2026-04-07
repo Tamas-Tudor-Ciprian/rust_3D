@@ -50,12 +50,9 @@ impl Line
 
         pub fn point_from_param(&self,t : f64) ->Vec2{
 
-            let dir = self.get_direction_vector()
+            let dir = self.get_direction_vector();
 
-	    let p_x = t + self.a.x;
-	    let p_y = t * slope + self.a.y;
-            
-            Vec2{ x : self.a.x + t * dir.x, y : self.a.y + t * dir.x}
+            Vec2{ x : self.a.x + t * dir.x, y : self.a.y + t * dir.y}
 
         }
 
@@ -88,15 +85,15 @@ pub fn circle_line_intersection( c: &Circle, l: &Line) -> Option<(Vec2,Vec2)> {
 	let yl = l.a.y;
 	let a = line_dir.x;
 	let b = line_dir.y;
-	let d1 = xl + c.o.x;
-	let d2 = yl + c.o.y;
+	let d1 = xl - c.o.x;
+	let d2 = yl - c.o.y;
 	let r = c.r;
 
 	//now we abstract away the previous parameters
 	
 	let alpha = a*a + b*b;
-	let beta = 2 * ( a * d1 + b * d2);
-	let gamma = d1 * d1 + d2 * d2 + r * r;
+	let beta = 2.0 * ( a * d1 + b * d2);
+	let gamma = d1 * d1 + d2 * d2 - r * r;
 
 
 
@@ -108,8 +105,17 @@ pub fn circle_line_intersection( c: &Circle, l: &Line) -> Option<(Vec2,Vec2)> {
             return None;
         }
 
+	let (mut t1,mut t2) = intersection.unwrap();
 
-	let (t1,t2) = intersection.unwrap();
+	let in1 = t1 > 0.0 && t1 < 1.0;
+	let in2 = t2 > 0.0 && t2 < 1.0;
+
+	match (in1, in2) {
+	    	(true, true)   => {},                // both fine
+    		(true, false)  => t2 = t1,           // use t1 for both
+    		(false, true)  => t1 = t2,           // use t2 for both
+    		(false, false) => return None,       // no segment hit
+	}
 
 
         let p1 = l.point_from_param(t1);

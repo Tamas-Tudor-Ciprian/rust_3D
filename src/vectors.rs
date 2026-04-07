@@ -6,6 +6,18 @@ pub struct Vec2 {
 	pub y:f64,
 }
 
+impl Vec2{
+	pub fn from_angle(theta: &f64) ->Self{
+		Self{
+		x: theta.cos(),
+		y: theta.sin(),
+		}
+
+	}
+
+
+}
+
 impl Add for Vec2 {
 	type Output = Vec2;
 

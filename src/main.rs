@@ -31,7 +31,7 @@ use std::f64::consts::PI;
 use std::time::Duration;
 
 const SCREEN_MEASURES: (i32,i32) = (156,50);
-const FOV: f64 = PI/2.0;
+const FOV: f64 = PI / 2.5 ;
 const RENDER_DISTANCE : f64 = 25.0;
 const SQUARE_SIZE : f64 = 3.0;
 const SQUARE_DISTANCE : f64 = 0.0;
@@ -167,10 +167,15 @@ fn render_fov(buffer: &mut Vec<Vec<(u8,u8)>>,player : &Player, lines : &Vec<Line
 
 	for line in  lines{
 		for (i,ray) in rays.iter().enumerate(){
-			let (t,u) = ray_line_delta(ray,&line);
+			let (mut t,u) = ray_line_delta(ray,&line);
 			if t > 0.0 && u > 0.0 && u < 1.0{
+				
+				let ray_angle = initial_angle + angle_increment  * i as f64;
+
+				t = t * (ray_angle - player.angle).cos();
 
 				let pct = t / RENDER_DISTANCE;
+
 
 				let mut shading = if pct < 0.25{
 				(1,0) //this is for the closest
@@ -187,8 +192,10 @@ fn render_fov(buffer: &mut Vec<Vec<(u8,u8)>>,player : &Player, lines : &Vec<Line
 
 				if u < 0.025 || u > 0.975{shading.1 = 1;}
 
-				
-				load_line(buffer,i as usize,(RENDER_DISTANCE - t ) as usize,shading);
+				let wall_height = (SCREEN_MEASURES.1 as f64  * SQUARE_SIZE / t ) as usize;
+
+				if shading.0 == 0 {continue;}	
+				load_line(buffer,i as usize,wall_height ,shading);
 				
 			}
 		}
@@ -291,21 +298,35 @@ impl Direction{
 
 pub fn get_direction_block(&mut self,  player: &Player, lines: &Vec<Line>){
 
-	let circle = Circle{o:player.position, r : 0.5};
+	let circle = Circle{o:player.position, r : 1.0};
 
 	for line in lines{
 
 		let dir = circle_line_dir(&circle, line);
 
 		
-		match dir{
-			None => {}
-			Some(v) if v.x < 0.0 => {self.right = false;}
-			Some(v) if v.x > 0.0 => {self.left = false;}
-			Some(v) if v.y < 0.0 => {self.down = false;}
-			Some(v) if v.y > 0.0 => {self.up = false;}
-			_ => {}
-		}	
+		if dir != None{
+			let dir_result = dir.unwrap();
+			let player_dir = Vec2::from_angle(&player.angle);
+			let normalized_dir = Vec2{x: dir_result.x * player_dir.x + dir_result.y * player_dir.y,
+						 y: -dir_result.x * player_dir.y + dir_result.y * player_dir.x};
+			if normalized_dir.x < 0.0 {
+				self.up = false;
+			}
+			if normalized_dir.x > 0.0 {
+				 self.down = false;
+			}			
+			if normalized_dir.y < 0.0 {
+				self.right = false;
+			}
+			if normalized_dir.y > 0.0 {
+				self.left = false;
+			}
+
+		}
+
+
+	
 		
 	}
 
