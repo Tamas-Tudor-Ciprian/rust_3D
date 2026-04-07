@@ -1,13 +1,12 @@
 mod vectors;
 mod player;
-mod ray_line;
 mod delta_time;
 mod geometry;
 
 
 use vectors::*;
 use player::*;
-use ray_line::*;
+use geometry::*;
 
 
 use crossterm::{
@@ -265,13 +264,53 @@ fn display_player_coords(out:&mut Stdout,player: &Player)
 
 }
 
-fn get_direction_block(player: &Player, lines: &Vec<Line>){
+
+struct Direction{
+	up: bool,
+	down:bool,
+	left:bool,
+	right:bool,
+}
+
+impl Default for Direction{
+
+	fn default()->Self{
+	Self{
+		up:true,
+		down:true,
+		left:true,
+		right:true,
+	}
+
+	}
+
+}
 
 
+impl Direction{
+
+pub fn get_direction_block(&mut self,  player: &Player, lines: &Vec<Line>){
+
+	let circle = Circle{o:player.position, r : 0.5};
+
+	for line in lines{
+
+		let dir = circle_line_dir(&circle, line);
+
+		
+		match dir{
+			None => {}
+			Some(v) if v.x < 0.0 => {self.right = false;}
+			Some(v) if v.x > 0.0 => {self.left = false;}
+			Some(v) if v.y < 0.0 => {self.down = false;}
+			Some(v) if v.y > 0.0 => {self.up = false;}
+			_ => {}
+		}	
+		
+	}
 
 
-
-
+}
 
 }
 
@@ -282,10 +321,10 @@ fn main(){
 			"#####################",
 			"#                   #",
 			"#                   #",
+			"#      ########     #",
 			"#                   #",
-			"#        ######     #",
 			"#                   #",
-			"#                   #",
+			"#     #########     #",
 			"#                   #",
 			"############## ######",
 			];
@@ -345,13 +384,18 @@ fn main(){
 	if event::poll(Duration::from_millis(0)).unwrap_or(false) {
 		if let Ok(Event::Key(key)) = event::read(){
 			if key.kind == KeyEventKind::Press {
+
+				let mut dir_block = Direction::default();
+
+				dir_block.get_direction_block(&player,&lines);
+
 				match key.code {
 					KeyCode::Char('e') => player.rotate_left(delta_time::get()),
 					KeyCode::Char('q') => player.rotate_right(delta_time::get()),
-					KeyCode::Char('a') =>player.move_left(delta_time::get()),
-					KeyCode::Char('d') => player.move_right(delta_time::get()),
-					KeyCode::Char('w') => player.move_up(delta_time::get()),
-					KeyCode::Char('s') => player.move_down(delta_time::get()),
+					k if k == KeyCode::Char('a') && dir_block.left =>player.move_left(delta_time::get()),
+					k if k == KeyCode::Char('d') && dir_block.right => player.move_right(delta_time::get()),
+					k if k ==KeyCode::Char('w') && dir_block.up => player.move_up(delta_time::get()),
+					k if k == KeyCode::Char('s')&& dir_block.down => player.move_down(delta_time::get()),
 					KeyCode::Esc => break,
 					_ => {},
 				}

@@ -50,12 +50,12 @@ impl Line
 
         pub fn point_from_param(&self,t : f64) ->Vec2{
 
-            let slope = self.get_slope();
+            let dir = self.get_direction_vector()
 
 	    let p_x = t + self.a.x;
 	    let p_y = t * slope + self.a.y;
             
-            Vec2{ x : p_x, y : p_y}
+            Vec2{ x : self.a.x + t * dir.x, y : self.a.y + t * dir.x}
 
         }
 
@@ -83,20 +83,24 @@ pub fn circle_line_intersection( c: &Circle, l: &Line) -> Option<(Vec2,Vec2)> {
 
 	let line_dir = l.get_direction_vector();
 
-	let slope = line_dir.y/line_dir.x;
+	//these feature in the parametric equations
+	let xl = l.a.x;
+	let yl = l.a.y;
+	let a = line_dir.x;
+	let b = line_dir.y;
+	let d1 = xl + c.o.x;
+	let d2 = yl + c.o.y;
+	let r = c.r;
 
-	let a = l.a.x - c.o.x;
-
-	let b = l.a.y - c.o.y;
-
-	//now for the variables we will actually use
-
-	let alpha = 1.0+ slope * slope;
-	let beta = 2.0 * (a + b * slope);
-	let c = a * a + b * b - c.r *c.r;
+	//now we abstract away the previous parameters
+	
+	let alpha = a*a + b*b;
+	let beta = 2 * ( a * d1 + b * d2);
+	let gamma = d1 * d1 + d2 * d2 + r * r;
 
 
-	let intersection = quadratic(alpha,beta,c);
+
+	let intersection = quadratic(alpha,beta,gamma);
 
 
         if intersection == None
@@ -123,7 +127,7 @@ pub fn point_to_line(p : &Vec2, l : &(Vec2,Vec2)) -> Option<Vec2>{
 	let a = l.0;
 	let b = l.1;
 
-	let d = b - a;
+	let d = b + a;
 	
 	//this be the midpoint
 	let c = Vec2{x: d.x/2.0 , y: d.y/2.0};
